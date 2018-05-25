@@ -6,9 +6,13 @@ This mod comes with a set of predefined radiant damage types, all of which can b
 
 ## Configurable Presets
 
+**Important note:** none of these predefined radiant damage types are enabled by default. This is because one of this mod's intended uses is as a library for other mods to use to enable their own radiant damage types. There is no way to de-register a globalstep callback (the mechanism used by this mod to deliver damage) once it has been registered, so to keep the mod maximally flexible nothing is registered by default.
+
+Set one or more of the following types to enabled if you want this mod to have an effect out-of-the-box.
+
 The following settings exist for predefined radiant damage types:
 
-    radiant_damage_enable_lava_damage (Enable radiant lava damage) bool true
+    radiant_damage_enable_lava_damage (Enable radiant lava damage) bool false
     radiant_damage_lava_damage (Damage dealt per second when standing directly adjacent to one lava node) int 10
     radiant_damage_lava_range (Maximum range at which radiant lava damage is dealt) int 4
 
@@ -20,7 +24,7 @@ The following settings exist for predefined radiant damage types:
     radiant_damage_mese_interval (Number of seconds between mese radiation damage checks) int 5
     radiant_damage_mese_damage (Damage dealt per second when standing directly adjacent to one mese node) int 5
     radiant_damage_mese_range (Maximum range at which mese radiation causes damage) int 3
-
+	radiant_damage_mese_occlusion (Sets whether other nodes block mese radiation) bool false
 
 ## API
 

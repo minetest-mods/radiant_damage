@@ -99,7 +99,7 @@ radiant_damage.register_radiant_damage = function(damage_def)
 				local rounded_pos = vector.round(player_pos)
 				local nearby_nodes
 				if above_only then
-					nearby_nodes = minetest.find_nodes_in_area(vector.add(rounded_pos - {x=0,y=range,z=0}), rounded_pos, nodenames)
+					nearby_nodes = minetest.find_nodes_in_area(vector.add(rounded_pos, {x=0, y= -range, z=0}), rounded_pos, nodenames)
 				else
 					nearby_nodes = minetest.find_nodes_in_area(vector.add(rounded_pos, -range), vector.add(rounded_pos, range), nodenames)
 				end
@@ -170,7 +170,7 @@ radiant_damage.register_radiant_damage({
 	inverse_square_falloff = true,
 	damage = radiant_damage.config.mese_damage,
 	nodenames = {"default:stone_with_mese", "default:mese"},
-	occlusion = true,
+	occlusion = radiant_damage.config.mese_occlusion,
 	cumulative = true,
 })
 end

@@ -106,7 +106,12 @@ radiant_damage.register_radiant_damage = function(damage_def)
 				
 				local total_damage = 0
 				for _, node_pos in ipairs(nearby_nodes) do
-					local distance = math.max(vector.distance(player_pos, node_pos), 1) -- clamp to 1 to avoid inverse falloff causing crazy huge damage when standing inside a node
+					local distance
+					if above_only then
+						distance = math.max(player_pos.y - node_pos.y, 1)
+					else
+						distance = math.max(vector.distance(player_pos, node_pos), 1) -- clamp to 1 to avoid inverse falloff causing crazy huge damage when standing inside a node
+					end
 					if distance <= range and (not occlusion or occlusion_check(node_pos, player_pos)) then
 						if inverse_square_falloff then
 							if cumulative then
@@ -127,7 +132,7 @@ radiant_damage.register_radiant_damage = function(damage_def)
 
 				if total_damage >= 1 then
 					total_damage = math.floor(total_damage)
-					minetest.log("action", player:get_player_name() .. " takes " .. tostring(total_damage) .. " damage from " .. damage_name .. " radiant damage.")
+					minetest.log("action", player:get_player_name() .. " takes " .. tostring(total_damage) .. " damage from " .. damage_name .. " radiant damage at " .. minetest.pos_to_string(rounded_pos))
 					player:set_hp(player:get_hp() - total_damage)
 				end
 			end

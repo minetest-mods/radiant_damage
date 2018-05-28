@@ -23,16 +23,10 @@ local function setting(stype, name, default, description)
 	end	
 end
 
-setting("bool", "enable_lava_damage", false, "Enable radiant lava damage")
+setting("bool", "enable_heat_damage", false, "Enable radiant lava damage")
 setting("int", "lava_damage", 10, "Damage dealt per second when standing directly adjacent to one lava node")
-setting("int", "lava_range", 4, "Maximum range at which radiant lava damage is dealt")
-
-setting("bool", "enable_fire_damage", false, "Enable radiant fire damage")
 setting("int", "fire_damage", 2, "Damage dealt per second when standing directly adjacent to one fire node")
-setting("int", "fire_range", 2, "Maximum range at which radiant fire damage is dealt")
 
 setting("bool", "enable_mese_damage", false, "Enable mese ore radiation damage")
 setting("int", "mese_interval", 5, "Number of seconds between mese radiation damage checks")
-setting("int", "mese_damage", 5, "Damage dealt per second when standing directly adjacent to one mese node")
-setting("int", "mese_range", 3, "Maximum range at which mese radiation causes damage")
-setting("bool", "mese_occlusion", false, "Sets whether mese radiation is blocked by other nodes")
+setting("int", "mese_damage", 2, "Damage dealt per interval when standing directly adjacent to one mese ore node")

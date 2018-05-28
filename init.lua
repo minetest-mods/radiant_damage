@@ -134,6 +134,9 @@ end
 end
 
 radiant_damage.register_radiant_damage = function(damage_def)
+
+	if not minetest.settings:get_bool("enable_damage") then return end -- don't bother if enable_damage isn't set.
+
 	local interval = damage_def.interval or 1
 	local timer = 0
 	
@@ -187,16 +190,16 @@ radiant_damage.register_radiant_damage = function(damage_def)
 	
 	local damage_name = damage_def.damage_name or "unnamed"
 	
-	minetest.debug(
-		damage_name .. "\n" ..
-		tostring(range) .. "\n" ..
-		dump(nodenames).. "\n" ..
-		dump(emission_nodes) .. "\n" ..
-		dump(emission_groups) .. "\n" ..
-		dump(attenuation_nodes) .. "\n" ..
-		dump(attenuation_groups) .. "\n" ..
-		tostring(default_attenuation)
-	)
+--	minetest.debug(
+--		damage_name .. "\n" ..
+--		tostring(range) .. "\n" ..
+--		dump(nodenames).. "\n" ..
+--		dump(emission_nodes) .. "\n" ..
+--		dump(emission_groups) .. "\n" ..
+--		dump(attenuation_nodes) .. "\n" ..
+--		dump(attenuation_groups) .. "\n" ..
+--		tostring(default_attenuation)
+--	)
 	
 	minetest.register_globalstep(function(dtime)
 		timer = timer + dtime

@@ -12,19 +12,13 @@ Set one or more of the following types to enabled if you want this mod to have a
 
 The following settings exist for predefined radiant damage types:
 
-    radiant_damage_enable_lava_damage (Enable radiant lava damage) bool false
+    radiant_damage_enable_heat_damage (Enable radiant heat damage) bool false
     radiant_damage_lava_damage (Damage dealt per second when standing directly adjacent to one lava node) int 10
-    radiant_damage_lava_range (Maximum range at which radiant lava damage is dealt) int 4
-
-    radiant_damage_enable_fire_damage (Enable radiant fire damage) bool false
     radiant_damage_fire_damage (Damage dealt per second when standing directly adjacent to one fire node) int 2
-    radiant_damage_fire_range (Maximum range at which radiant fire damage is dealt) int 2
-
+    
     radiant_damage_enable_mese_damage (Enable mese ore radiation damage) bool false
     radiant_damage_mese_interval (Number of seconds between mese radiation damage checks) int 5
-    radiant_damage_mese_damage (Damage dealt per second when standing directly adjacent to one mese node) int 5
-    radiant_damage_mese_range (Maximum range at which mese radiation causes damage) int 3
-	radiant_damage_mese_occlusion (Sets whether other nodes block mese radiation) bool false
+    radiant_damage_mese_damage (Damage dealt per second when standing directly adjacent to one mese ore node) int 2
 
 ## API
 
@@ -37,16 +31,28 @@ Call:
 where damage_def is a table such as:
 
 ```
-damage_def:
 {
-	damage_name = "lava", -- a string used in logs to identify the type of damage dealt.
-	interval = 1, -- number of seconds between each damage check. Defaults to 1.
-	range = 3, -- maximum range of the damage. Can be omitted if inverse_square_falloff is true, in that case it defaults to the range at which 1 point of damage is done.
+	damage_name = "radiant damage", -- a string used to identify the type of damage dealt.
+	interval = 1, -- number of seconds between each damage check
+	range = 3, -- range of the damage. Can be omitted if inverse_square_falloff is true, in that case it defaults to the range at which 1 point of damage is done by the most damaging emitter node type.
+	emitted_by = {}, -- nodes that emit this damage. At least one is required.
+	attenuated_by = {} -- This allows certain intervening node types to modify the damage that radiates through it. Note: Only works in Minetest version 0.5 and above.
+	default_attenuation = 1, -- the amount the damage is multiplied by when passing through any other non-air nodes. Note that in versions before Minetest 0.5 any value other than 1 will result in total occlusion (ie, any non-air node will block all damage)
 	inverse_square_falloff = true, -- if true, damage falls off with the inverse square of the distance. If false, damage is constant within the range.
-	damage = 10, -- number of damage points dealt each interval (if inverse square falloff is true this is the damage done to players 1 node away)
-	nodenames = {"group:lava"}, -- nodes that cause this damage. Same format as the nodenames parameter for minetest.find_nodes_in_area
-	occlusion = true, -- if true, damaging effect only passes through air. Other nodes will cast protective "shadows".
-	above_only = false, -- if true, damage only propagates directly upward. Useful for things that damage you if you stand on them.
-	cumulative = true, -- if true, all nodes within range do damage. If false, only the nearest one does damage.
+	above_only = false, -- if true, damage only propagates directly upward. Useful for when you want to damage players that stand on the node.
 }
 ```
+
+emitted_by has the following format:
+```
+	{["default:stone_with_mese"] = 2, ["default:mese"] = 9}
+```
+where the value associated with each entry is the amount of damage dealt. Groups are permitted. Note that negative damage represents "healing" radiation.
+
+attenuated_by has the following similar format:
+
+```
+	{["group:stone"] = 0.25, ["default:steelblock"] = 0}
+```
+
+where the value is a multiplier that is applied to the damage passing through it. Groups are permitted. Note that you can use values greater than one to make a node type magnify damage instead of attenuating it.

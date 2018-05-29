@@ -20,6 +20,8 @@ The following settings exist for predefined radiant damage types:
     radiant_damage_mese_interval (Number of seconds between mese radiation damage checks) int 5
     radiant_damage_mese_damage (Damage dealt per second when standing directly adjacent to one mese ore node) int 2
 
+Mese radiation is attenuated by a factor of 0.9 when passing through most materials, by 0.5 when passing through anything with group:stone, by 0.1 when passing through anything with group:mese_radiation_shield (all default metal blocks are given this group), and is _amplified_ by a factor of 4 when passing through nodes with group:mese_radiation_amplifier (default coal and diamond blocks). Note that these fine-grained attenuation factors only work in Minetest 0.5 and higher, for 0.4.16 any non-air node will block all damage.
+	
 ## API
 
 Call:
@@ -32,14 +34,14 @@ where damage_def is a table such as:
 
 ```
 {
-	damage_name = "radiant damage", -- a string used to identify the type of damage dealt.
-	interval = 1, -- number of seconds between each damage check
+	damage_name = "radiant damage", -- a string used to identify the type of damage dealt in logs.
+	interval = 1, -- number of seconds between each damage check. Defaults to 1 when undefined.
 	range = 3, -- range of the damage. Can be omitted if inverse_square_falloff is true, in that case it defaults to the range at which 1 point of damage is done by the most damaging emitter node type.
-	emitted_by = {}, -- nodes that emit this damage. At least one is required.
-	attenuated_by = {} -- This allows certain intervening node types to modify the damage that radiates through it. Note: Only works in Minetest version 0.5 and above.
-	default_attenuation = 1, -- the amount the damage is multiplied by when passing through any other non-air nodes. Note that in versions before Minetest 0.5 any value other than 1 will result in total occlusion (ie, any non-air node will block all damage)
-	inverse_square_falloff = true, -- if true, damage falls off with the inverse square of the distance. If false, damage is constant within the range.
-	above_only = false, -- if true, damage only propagates directly upward. Useful for when you want to damage players that stand on the node.
+	emitted_by = {}, -- nodes that emit this damage. At least one emission node type and damage value pair is required.
+	attenuated_by = {} -- This allows certain intervening node types to modify the damage that radiates through it. This parameter is optional. Note: Only works in Minetest version 0.5 and above.
+	default_attenuation = 1, -- the amount the damage is multiplied by when passing through any other non-air nodes. Defaults to 0 when undefined. Note that in versions before Minetest 0.5 any value other than 1 will result in total occlusion (ie, any non-air node will block all damage)
+	inverse_square_falloff = true, -- if true, damage falls off with the inverse square of the distance. If false, damage is constant within the range. Defaults to true when undefined.
+	above_only = false, -- if true, damage only propagates directly upward. Useful for when you want to damage players only when they stand on the node. Defaults to false when undefined.
 }
 ```
 

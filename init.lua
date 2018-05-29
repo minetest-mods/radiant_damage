@@ -288,7 +288,7 @@ radiant_damage.register_radiant_damage({
 	interval = radiant_damage.config.mese_interval,
 	inverse_square_falloff = true,
 	emitted_by = {["default:stone_with_mese"] = radiant_damage.config.mese_damage, ["default:mese"] = radiant_damage.config.mese_damage * 9},
-	attenuated_by = {["group:stone"] = 0.5, ["group:mese_radiation_shield"] = 0.1, ["group:mese_radiation_amplifier"] = 2},
+	attenuated_by = {["group:stone"] = 0.5, ["group:mese_radiation_shield"] = 0.1, ["group:mese_radiation_amplifier"] = 4},
 	default_attenuation = 0.9,
 })
 end

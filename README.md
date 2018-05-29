@@ -27,14 +27,13 @@ Mese radiation is attenuated by a factor of 0.9 when passing through most materi
 Call:
 
 ```
-	radiant_damage.register_radiant_damage(damage_def)
+	radiant_damage.register_radiant_damage(damage_name, damage_def)
 ```
 
-where damage_def is a table such as:
+where damage_name is a string used to identify this damage type and damage_def is a table such as:
 
 ```
 {
-	damage_name = "radiant damage", -- a string used to identify the type of damage dealt in logs.
 	interval = 1, -- number of seconds between each damage check. Defaults to 1 when undefined.
 	range = 3, -- range of the damage. Can be omitted if inverse_square_falloff is true, in that case it defaults to the range at which 1 point of damage is done by the most damaging emitter node type.
 	emitted_by = {}, -- nodes that emit this damage. At least one emission node type and damage value pair is required.

@@ -6,7 +6,6 @@ dofile(modpath.."/config.lua")
 
 -- damage_def:
 --{
---	damage_name = "radiant damage", -- a string used to identify the type of damage dealt.
 --	interval = 1, -- number of seconds between each damage check
 --	range = 3, -- range of the damage. Can be omitted if inverse_square_falloff is true, in that case it defaults to the range at which 1 point of damage is done by the most damaging emitter node type.
 --	emitted_by = {}, -- nodes that emit this damage. At least one is required.
@@ -133,7 +132,7 @@ end
 
 end
 
-radiant_damage.register_radiant_damage = function(damage_def)
+radiant_damage.register_radiant_damage = function(damage_name, damage_def)
 
 	if not minetest.settings:get_bool("enable_damage") then return end -- don't bother if enable_damage isn't set.
 
@@ -187,8 +186,6 @@ radiant_damage.register_radiant_damage = function(damage_def)
 	if default_attenuation == nil then default_attenuation = 0 end
 	
 	local above_only = damage_def.above_only -- default to false
-	
-	local damage_name = damage_def.damage_name or "unnamed"
 	
 --	minetest.debug(
 --		damage_name .. "\n" ..
@@ -248,12 +245,10 @@ radiant_damage.register_radiant_damage = function(damage_def)
 			end
 		end
 	end)
-	
 end
 
 if radiant_damage.config.enable_heat_damage then
-radiant_damage.register_radiant_damage({
-	damage_name = "heat",
+radiant_damage.register_radiant_damage("heat", {
 	interval = 1,
 	emitted_by = {["group:lava"] = radiant_damage.config.lava_damage, ["fire:basic_flame"] = radiant_damage.config.fire_damage},
 	inverse_square_falloff = true,
@@ -283,8 +278,7 @@ for _, amp_node in ipairs(amplifiers) do
 	end
 end
 
-radiant_damage.register_radiant_damage({
-	damage_name = "mese",
+radiant_damage.register_radiant_damage("mese", {
 	interval = radiant_damage.config.mese_interval,
 	inverse_square_falloff = true,
 	emitted_by = {["default:stone_with_mese"] = radiant_damage.config.mese_damage, ["default:mese"] = radiant_damage.config.mese_damage * 9},

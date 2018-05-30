@@ -1,4 +1,4 @@
-radiant_damage_enable_heat_damage (Enable radiant lava damage) bool false
+radiant_damage_enable_heat_damage (Enable radiant heat damage) bool false
 radiant_damage_lava_damage (Damage dealt per second when standing directly adjacent to one lava node) int 10
 radiant_damage_fire_damage (Damage dealt per second when standing directly adjacent to one fire node) int 2
 

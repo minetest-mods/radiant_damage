@@ -57,3 +57,10 @@ attenuated_by has the following similar format:
 ```
 
 where the value is a multiplier that is applied to the damage passing through it. Groups are permitted. Note that you can use values greater than one to make a node type magnify damage instead of attenuating it.
+
+## Further reading
+
+These wiki pages may be of interest regarding the principles behind some of this mods' functions:
+
+* [Inverse-square law](https://en.wikipedia.org/wiki/Inverse-square_law)
+* [Half-value layer](https://en.wikipedia.org/wiki/Half-value_layer)

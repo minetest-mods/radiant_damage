@@ -132,76 +132,156 @@ end
 
 end
 
-radiant_damage.register_radiant_damage = function(damage_name, damage_def)
+radiant_damage.registered_damage_types = {}
 
-	if not minetest.settings:get_bool("enable_damage") then return end -- don't bother if enable_damage isn't set.
+-- This method will update the registered_damage_types table with new values, keeping all the parameters
+-- consistent and in proper relation to each other.
+local update_damage_type = function(damage_name, new_def)
 
-	local interval = damage_def.interval or 1
-	local timer = 0
+	if radiant_damage.registered_damage_types[damage_name] == nil then
+		radiant_damage.registered_damage_types[damage_name] = {}
+	end
+	local damage_def = radiant_damage.registered_damage_types[damage_name]
 	
-	local range = damage_def.range
-	local inverse_square_falloff = (damage_def.inverse_square_falloff == nil) or damage_def.inverse_square_falloff -- default to true
-	if inverse_square_falloff and range == nil then
-		range = 0
-		for _, damage in pairs(damage_def.emitted_by) do
-			range = math.max(math.sqrt(damage), range) -- use the maximum damage-dealer to determine range.
-		end
+	-- Interval
+	if new_def.interval ~= nil then
+		damage_def.interval = new_def.interval
+	elseif damage_def.interval == nil then
+		damage_def.interval = 1
 	end
-
-	local nodenames = {} -- for use with minetest.find_nodes_in_area
-	for nodename, damage in pairs(damage_def.emitted_by) do
-		table.insert(nodenames, nodename)
+	
+	-- Inverse square falloff
+	if new_def.inverse_square_falloff ~= nil then
+		damage_def.inverse_square_falloff = new_def.inverse_square_falloff
+	elseif damage_def.inverse_square_falloff == nil then
+		damage_def.inverse_square_falloff = true
 	end
+	
+	-- Default attenuation value
+	if new_def.default_attenuation ~= nil then
+		damage_def.default_attenuation = new_def.default_attenuation
+	elseif damage_def.default_attenuation == nil then
+		damage_def.default_attenuation = 0
+	end
+	
+	-- Above Only
+	damage_def.above_only = new_def.above_only -- default to false
 
+	
 	-- it is efficient to split the emission and attenuation data into separate node and group maps.
-
-	local emission_nodes = nil
-	local emission_groups = nil
-	for nodename, damage in pairs(damage_def.emitted_by) do
-		emission_nodes = emission_nodes or {}
-		emission_groups = emission_groups or {}
+	
+	-- Emitted by
+	damage_def.emission_nodes = damage_def.emission_nodes or {}
+	damage_def.emission_groups = damage_def.emission_groups or {}
+	for nodename, damage in pairs(new_def.emitted_by) do
+		if damage == 0 then damage = nil end -- causes removal of damage-0 node types
 		if string.sub(nodename, 1, 6) == "group:" then
-			emission_groups[string.sub(nodename, 7)] = damage -- omit the "group:" prefix
+			damage_def.emission_groups[string.sub(nodename, 7)] = damage -- omit the "group:" prefix
 		else
-			emission_nodes[nodename] = damage
+			damage_def.emission_nodes[nodename] = damage
 		end
 	end
 	
+	damage_def.nodenames = damage_def.nodenames or {} -- for use with minetest.find_nodes_in_area
+	for nodename, damage in pairs(new_def.emitted_by) do
+		local handled = false
+		for i, v in ipairs(damage_def.nodenames) do
+			if v == nodename then
+				if damage == 0 then
+					table.remove(damage_def.nodenames, i)
+				end
+				handled = true
+				break
+			end
+		end
+	
+		if not handled then
+			table.insert(damage_def.nodenames, nodename)
+		end
+	end
+
 	-- These remain nil unless some valid data is provided.
-	local attenuation_nodes = nil
-	local attenuation_groups = nil
-	if damage_def.attenuated_by and Raycast then
-		for nodename, attenuation in pairs(damage_def.attenuated_by) do
-			attenuation_nodes = attenuation_nodes or {}
-			attenuation_groups = attenuation_groups or {}		
+	if new_def.attenuated_by and Raycast then
+		for nodename, attenuation in pairs(new_def.attenuated_by) do
+			damage_def.attenuation_nodes = damage_def.attenuation_nodes or {}
+			damage_def.attenuation_groups = damage_def.attenuation_groups or {}		
 			if string.sub(nodename, 1, 6) == "group:" then
-				attenuation_groups[string.sub(nodename, 7)] = attenuation -- omit the "group:" prefix
+				damage_def.attenuation_groups[string.sub(nodename, 7)] = attenuation -- omit the "group:" prefix
 			else
-				attenuation_nodes[nodename] = attenuation
+				damage_def.attenuation_nodes[nodename] = attenuation
 			end
 		end
 	end	
 
-	local default_attenuation = damage_def.default_attenuation
-	if default_attenuation == nil then default_attenuation = 0 end
+	-- remove any attenuation nodes or groups that match the default attenuation, they're pointless.
+	if damage_def.attenuation_groups then
+		for node, attenuation in pairs(damage_def.attenuation_groups) do
+			if attenuation == damage_def.default_attenuation then
+				damage_def.attenuation_groups[node] = nil
+			end
+		end
+	end
+	if damage_def.attenuation_nodes then
+		for node, attenuation in pairs(damage_def.attenuation_nodes) do
+			if attenuation == damage_def.default_attenuation then
+				damage_def.attenuation_nodes[node] = nil
+			end
+		end
+	end
+
+	-- Range
+	if new_def.range ~= nil then
+		damage_def.absolute_range = true
+		damage_def.range = new_def.range
+	elseif damage_def.inverse_square_falloff and not damage_def.absolute_range then
+		damage_def.range = 0
+		for _, damage in pairs(damage_def.emission_nodes) do
+			damage_def.range = math.max(math.sqrt(math.abs(damage*8)), damage_def.range) -- use the maximum damage-dealer to determine range.
+		end
+		for _, damage in pairs(damage_def.emission_groups) do
+			damage_def.range = math.max(math.sqrt(math.abs(damage*8)), damage_def.range) -- use the maximum damage-dealer to determine range.
+		end
+	end
+
+	return damage_def
+end
+
+radiant_damage.override_radiant_damage = function(damage_name, damage_def)
+	if radiant_damage.registered_damage_types[damage_name] then
+		update_damage_type(damage_name, damage_def)
+	else
+		minetest.log("error", "Attempt was made to override unregistered radiant_damage type " .. damage_name)
+	end
+end
+
+radiant_damage.register_radiant_damage = function(damage_name, damage_def)
+	if not minetest.settings:get_bool("enable_damage") then return end -- don't bother if enable_damage isn't set.
 	
-	local above_only = damage_def.above_only -- default to false
+	if radiant_damage.registered_damage_types[damage_name] then
+		minetest.log("error", "Attempt was made to register the already-registered radiant_damage type " .. damage_name)
+		return
+	end
+
+	local damage_def = update_damage_type(damage_name, damage_def)
 	
---	minetest.debug(
---		damage_name .. "\n" ..
---		tostring(range) .. "\n" ..
---		dump(nodenames).. "\n" ..
---		dump(emission_nodes) .. "\n" ..
---		dump(emission_groups) .. "\n" ..
---		dump(attenuation_nodes) .. "\n" ..
---		dump(attenuation_groups) .. "\n" ..
---		tostring(default_attenuation)
---	)
-	
+	local timer = 0
+
 	minetest.register_globalstep(function(dtime)
 		timer = timer + dtime
+		local interval = damage_def.interval
 		if timer >= interval then
 			timer = timer - interval
+			
+			local range = damage_def.range
+			local above_only = damage_def.above_only
+			local nodenames = damage_def.nodenames
+			local default_attenuation = damage_def.default_attenuation
+			local attenuation_nodes = damage_def.attenuation_nodes
+			local attenuation_groups = damage_def.attenuation_groups
+			local emission_nodes = damage_def.emission_nodes
+			local emission_groups = damage_def.emission_groups
+			local inverse_square_falloff = damage_def.inverse_square_falloff
+			
 			for _, player in pairs(minetest.get_connected_players()) do
 				local player_pos = player:getpos() -- node player's feet are in this location. Add 1 to y to get chest height, more intuitive that way
 				player_pos.y = player_pos.y + 1
@@ -237,8 +317,8 @@ radiant_damage.register_radiant_damage = function(damage_name, damage_def)
 					end
 				end	
 
-				if total_damage >= 1 then
-					total_damage = math.floor(total_damage)
+				total_damage = math.floor(total_damage)
+				if total_damage ~= 0 then
 					minetest.log("action", player:get_player_name() .. " takes " .. tostring(total_damage) .. " damage from " .. damage_name .. " radiant damage at " .. minetest.pos_to_string(rounded_pos))
 					player:set_hp(player:get_hp() - total_damage)
 				end

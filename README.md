@@ -24,6 +24,8 @@ Mese radiation is attenuated by a factor of 0.9 when passing through most materi
 	
 ## API
 
+### Registering a damage type
+
 Call:
 
 ```
@@ -35,12 +37,24 @@ where damage_name is a string used to identify this damage type and damage_def i
 ```
 {
 	interval = 1, -- number of seconds between each damage check. Defaults to 1 when undefined.
-	range = 3, -- range of the damage. Can be omitted if inverse_square_falloff is true, in that case it defaults to the range at which 1 point of damage is done by the most damaging emitter node type.
-	emitted_by = {}, -- nodes that emit this damage. At least one emission node type and damage value pair is required.
-	attenuated_by = {} -- This allows certain intervening node types to modify the damage that radiates through it. This parameter is optional. Note: Only works in Minetest version 0.5 and above.
-	default_attenuation = 1, -- the amount the damage is multiplied by when passing through any other non-air nodes. Defaults to 0 when undefined. Note that in versions before Minetest 0.5 any value other than 1 will result in total occlusion (ie, any non-air node will block all damage)
-	inverse_square_falloff = true, -- if true, damage falls off with the inverse square of the distance. If false, damage is constant within the range. Defaults to true when undefined.
-	above_only = false, -- if true, damage only propagates directly upward. Useful for when you want to damage players only when they stand on the node. Defaults to false when undefined.
+	range = 3, -- range of the damage. Can be omitted if inverse_square_falloff is true,
+		-- in that case it defaults to the range at which 0.125 points of damage is done
+		-- by the most damaging emitter node type.
+	emitted_by = {}, -- nodes that emit this damage. At least one emission node type
+		-- and damage value pair is required.
+	attenuated_by = {} -- This allows certain intervening node types to modify the damage
+		-- that radiates through it. This parameter is optional.
+		-- Note: Only works in Minetest version 0.5 and above.
+	default_attenuation = 1, -- the amount the damage is multiplied by when passing 
+		-- through any other non-air nodes. Defaults to 0 when undefined. Note that
+		-- in versions before Minetest 0.5 any value other than 1 will result in total
+		-- occlusion (ie, any non-air node will block all damage)
+	inverse_square_falloff = true, -- if true, damage falls off with the inverse square
+		-- of the distance. If false, damage is constant within the range. Defaults to
+		-- true when undefined.
+	above_only = false, -- if true, damage only propagates directly upward. Useful for
+		-- when you want to damage players only when they stand on the node.
+		-- Defaults to false when undefined.
 }
 ```
 
@@ -57,6 +71,30 @@ attenuated_by has the following similar format:
 ```
 
 where the value is a multiplier that is applied to the damage passing through it. Groups are permitted. Note that you can use values greater than one to make a node type magnify damage instead of attenuating it.
+
+### Updating/overriding a registered damage type
+
+To modify or add new parameters to an existing already-registered damage type use the following function:
+
+```
+	radiant_damage.override_radiant_damage(damage_name, damage_def)
+```
+
+Where damage_def is a table as above but which only includes the new information. For example, a mod could add a new type of mese radiation emitter with the following:
+
+```
+	radiant_damage.override_radiant_damage("mese", {
+		emitted_by = {
+			["dfcaverns:glow_mese"] = radiant_damage.config.mese_damage * 12,
+		},
+	})
+```
+
+To remove an emission source set its emitted damage to 0.
+
+To remove an attenuation node type, set its attenuation factor to equal the default attenuation factor.
+
+If you wish to "disable" a registered damage type, use this override function to set its range to 1 and its interval to an enormous value (millions of seconds) to neutralize the damage type's global callback most efficiently.
 
 ## Further reading
 

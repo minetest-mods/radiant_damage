@@ -321,14 +321,14 @@ radiant_damage.register_radiant_damage = function(damage_name, damage_def)
 					end
 				end	
 
-				if total_damage > 0 then
-					if on_damage == nil then
-						total_damage = math.floor(total_damage)
+				if on_damage == nil then
+					total_damage = math.floor(total_damage)
+					if total_damage ~= 0 then
 						minetest.log("action", player:get_player_name() .. " takes " .. tostring(total_damage) .. " damage from " .. damage_name .. " radiant damage at " .. minetest.pos_to_string(rounded_pos))
 						player:set_hp(player:get_hp() - total_damage)
-					else
-						on_damage(player, total_damage)
 					end
+				else
+					on_damage(player, total_damage)
 				end
 			end
 		end

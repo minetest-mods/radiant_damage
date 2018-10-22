@@ -55,6 +55,10 @@ where damage_name is a string used to identify this damage type and damage_def i
 	above_only = false, -- if true, damage only propagates directly upward. Useful for
 		-- when you want to damage players only when they stand on the node.
 		-- Defaults to false when undefined.
+	on_damage = function(player_object, damage_value), -- An optional callback to allow mods
+		-- to do custom behaviour. If this is set to non-nil then the default damage will
+		-- *not* be done to the player, it's up to the callback to handle that. If it's left
+		-- undefined then damage_value is dealt to the player.
 }
 ```
 

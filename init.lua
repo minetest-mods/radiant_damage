@@ -13,6 +13,7 @@ dofile(modpath.."/config.lua")
 --	default_attenuation = 1, -- the amount the damage is multiplied by when passing through any other non-air nodes. Note that in versions before Minetest 0.5 any value other than 1 will result in total occlusion (ie, any non-air node will block all damage)
 --	inverse_square_falloff = true, -- if true, damage falls off with the inverse square of the distance. If false, damage is constant within the range.
 --	above_only = false, -- if true, damage only propagates directly upward. Useful for when you want to damage players that stand on the node.
+--	on_damage = function(player_object, damage_value) -- An optional callback to allow mods to do custom behaviour. If this is set to non-nil then the default damage will *not* be done to the player, it's up to the callback to handle that.
 --}
 
 -- emitted_by has the following format:
@@ -167,6 +168,8 @@ local update_damage_type = function(damage_name, new_def)
 	-- Above Only
 	damage_def.above_only = new_def.above_only -- default to false
 
+	-- on_damage callback
+	damage_def.on_damage = new_def.on_damage
 	
 	-- it is efficient to split the emission and attenuation data into separate node and group maps.
 	
@@ -281,6 +284,7 @@ radiant_damage.register_radiant_damage = function(damage_name, damage_def)
 			local emission_nodes = damage_def.emission_nodes
 			local emission_groups = damage_def.emission_groups
 			local inverse_square_falloff = damage_def.inverse_square_falloff
+			local on_damage = damage_def.on_damage
 			
 			for _, player in pairs(minetest.get_connected_players()) do
 				local player_pos = player:getpos() -- node player's feet are in this location. Add 1 to y to get chest height, more intuitive that way
@@ -320,7 +324,11 @@ radiant_damage.register_radiant_damage = function(damage_name, damage_def)
 				total_damage = math.floor(total_damage)
 				if total_damage ~= 0 then
 					minetest.log("action", player:get_player_name() .. " takes " .. tostring(total_damage) .. " damage from " .. damage_name .. " radiant damage at " .. minetest.pos_to_string(rounded_pos))
-					player:set_hp(player:get_hp() - total_damage)
+					if on_damage == nil then
+						player:set_hp(player:get_hp() - total_damage)
+					else
+						on_damage(player, total_damage)
+					end
 				end
 			end
 		end

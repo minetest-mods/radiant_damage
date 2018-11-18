@@ -252,7 +252,7 @@ end
 radiant_damage.override_radiant_damage = function(damage_name, damage_def)
 	if radiant_damage.registered_damage_types[damage_name] then
 		update_damage_type(damage_name, damage_def)
-	else
+	elseif minetest.settings:get_bool("enable_damage") then
 		minetest.log("error", "Attempt was made to override unregistered radiant_damage type " .. damage_name)
 	end
 end

@@ -13,7 +13,7 @@ Set one or more of the following types to enabled if you want this mod to have a
 The following settings exist for predefined radiant damage types:
 
     radiant_damage_enable_heat_damage (Enable radiant heat damage) bool false
-    radiant_damage_lava_damage (Damage dealt per second when standing directly adjacent to one lava node) int 10
+    radiant_damage_lava_damage (Damage dealt per second when standing directly adjacent to one lava node) int 8
     radiant_damage_fire_damage (Damage dealt per second when standing directly adjacent to one fire node) int 2
     
     radiant_damage_enable_mese_damage (Enable mese ore radiation damage) bool false
@@ -55,7 +55,7 @@ where damage_name is a string used to identify this damage type and damage_def i
 	above_only = false, -- if true, damage only propagates directly upward. Useful for
 		-- when you want to damage players only when they stand on the node.
 		-- Defaults to false when undefined.
-	on_damage = function(player_object, damage_value), -- An optional callback to allow mods
+	on_damage = function(player_object, damage_value, pos), -- An optional callback to allow mods
 		-- to do custom behaviour. If this is set to non-nil then the default damage will
 		-- *not* be done to the player, it's up to the callback to handle that. If it's left
 		-- undefined then damage_value is dealt to the player.

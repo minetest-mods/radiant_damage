@@ -13,7 +13,7 @@ dofile(modpath.."/config.lua")
 --	default_attenuation = 1, -- the amount the damage is multiplied by when passing through any other non-air nodes. Note that in versions before Minetest 0.5 any value other than 1 will result in total occlusion (ie, any non-air node will block all damage)
 --	inverse_square_falloff = true, -- if true, damage falls off with the inverse square of the distance. If false, damage is constant within the range.
 --	above_only = false, -- if true, damage only propagates directly upward. Useful for when you want to damage players that stand on the node.
---	on_damage = function(player_object, damage_value) -- An optional callback to allow mods to do custom behaviour. If this is set to non-nil then the default damage will *not* be done to the player, it's up to the callback to handle that.
+--	on_damage = function(player_object, damage_value, pos) -- An optional callback to allow mods to do custom behaviour. If this is set to non-nil then the default damage will *not* be done to the player, it's up to the callback to handle that.
 --}
 
 -- emitted_by has the following format:

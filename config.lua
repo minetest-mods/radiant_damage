@@ -24,7 +24,7 @@ local function setting(stype, name, default, description)
 end
 
 setting("bool", "enable_heat_damage", false, "Enable radiant lava damage")
-setting("int", "lava_damage", 10, "Damage dealt per second when standing directly adjacent to one lava node")
+setting("int", "lava_damage", 8, "Damage dealt per second when standing directly adjacent to one lava node")
 setting("int", "fire_damage", 2, "Damage dealt per second when standing directly adjacent to one fire node")
 
 setting("bool", "enable_mese_damage", false, "Enable mese ore radiation damage")

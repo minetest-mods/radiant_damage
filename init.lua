@@ -266,25 +266,25 @@ radiant_damage.register_radiant_damage = function(damage_name, damage_def)
 	end
 
 	local damage_def = update_damage_type(damage_name, damage_def)
+
+	local range = damage_def.range
+	local above_only = damage_def.above_only
+	local nodenames = damage_def.nodenames
+	local default_attenuation = damage_def.default_attenuation
+	local attenuation_nodes = damage_def.attenuation_nodes
+	local attenuation_groups = damage_def.attenuation_groups
+	local emission_nodes = damage_def.emission_nodes
+	local emission_groups = damage_def.emission_groups
+	local inverse_square_falloff = damage_def.inverse_square_falloff
+	local on_damage = damage_def.on_damage
+	local interval = damage_def.interval
 	
 	local timer = 0
 
 	minetest.register_globalstep(function(dtime)
 		timer = timer + dtime
-		local interval = damage_def.interval
 		if timer >= interval then
 			timer = timer - interval
-			
-			local range = damage_def.range
-			local above_only = damage_def.above_only
-			local nodenames = damage_def.nodenames
-			local default_attenuation = damage_def.default_attenuation
-			local attenuation_nodes = damage_def.attenuation_nodes
-			local attenuation_groups = damage_def.attenuation_groups
-			local emission_nodes = damage_def.emission_nodes
-			local emission_groups = damage_def.emission_groups
-			local inverse_square_falloff = damage_def.inverse_square_falloff
-			local on_damage = damage_def.on_damage
 			
 			for _, player in pairs(minetest.get_connected_players()) do
 				local player_pos = player:getpos() -- node player's feet are in this location. Add 1 to y to get chest height, more intuitive that way
@@ -328,7 +328,7 @@ radiant_damage.register_radiant_damage = function(damage_name, damage_def)
 						player:set_hp(player:get_hp() - total_damage)
 					end
 				else
-					on_damage(player, total_damage)
+					on_damage(player, total_damage, rounded_pos)
 				end
 			end
 		end
@@ -336,12 +336,62 @@ radiant_damage.register_radiant_damage = function(damage_name, damage_def)
 end
 
 if radiant_damage.config.enable_heat_damage then
-radiant_damage.register_radiant_damage("heat", {
-	interval = 1,
-	emitted_by = {["group:lava"] = radiant_damage.config.lava_damage, ["fire:basic_flame"] = radiant_damage.config.fire_damage},
-	inverse_square_falloff = true,
-	default_attenuation = 0, -- heat is blocked by anything.
-})
+	local on_fire_damage
+	if minetest.get_modpath("3d_armor") and armor ~= nil then
+		-- 3d_armor uses a strange fire protection system different from all the rest, wherein
+		-- its armor protects wholly against some heat sources and not at all against others
+		-- based on how "hot" they are and how strong against fire the armor is.
+		-- Level 1 protects against a wall torch, level 3 protects against a basic fire, and level 5 protects against lava.
+		
+		-- Converting this into a standard armor type is going to require some arbitrary decisions.
+		-- My decision is: level 5 protection should reduce the default damage from lava immersion from 8 to 0.5 hp (0.0625 multiplier).
+		-- Level 3 protection reduces the default damage from basic flame from 4 to 0.5 hp (0.125 multiplier)
+		-- Torches don't do damage in default so I will ignore that.
+		-- Level 0 has a damage multiplier of 1.
+		
+		-- That gives us three data points: (0,1), (3,0.125), (5,0.0625). Fitting that to an exponential curve gives us:
+		-- y = 0.0481417 + 0.9518583*e^(-0.8388176*x)
+		-- Which looks about right on a graph, and "looks about right on a graph" is good enough for me.
+		on_fire_damage = function(player, damage, pos)
+			local fire_protection = armor.def[player:get_player_name()].fire
+			local fire_multiplier = 1
+			if fire_protection then
+				fire_multiplier = math.min(1, 0.0481417 + 0.9518583 * math.exp(-0.8388176*fire_protection))
+			end
+			-- If the player also has conventional fire armor, use whatever's better.
+			local fire_armor = player:get_armor_groups().fire
+			if fire_armor then
+				fire_multiplier = math.min(fire_multiplier, fire_armor/100)
+			end
+			damage = math.floor(damage * fire_multiplier)
+			if damage > 0 then
+				minetest.log("action", player:get_player_name() .. " takes " .. tostring(damage) .. " damage from heat radiant damage at " .. minetest.pos_to_string(pos))
+				player:set_hp(player:get_hp() - damage)
+				minetest.sound_play({name = "radiant_damage_sizzle", gain = math.min(1, damage/10), pos=pos})
+			end
+		end
+	else
+		on_fire_damage = function(player, damage, pos)
+			local fire_armor = player:get_armor_groups().fire
+			if fire_armor then
+				damage = damage * fire_armor / 100
+			end
+			damage = math.floor(damage)
+			if damage > 0 then
+				minetest.log("action", player:get_player_name() .. " takes " .. tostring(damage) .. " damage from heat radiant damage at " .. minetest.pos_to_string(pos))
+				player:set_hp(player:get_hp() - damage)
+				minetest.sound_play({name = "radiant_damage_sizzle", gain = math.min(1, damage/10), pos=pos})
+			end
+		end
+	end
+		
+	radiant_damage.register_radiant_damage("heat", {
+		interval = 1,
+		emitted_by = {["group:lava"] = radiant_damage.config.lava_damage, ["fire:basic_flame"] = radiant_damage.config.fire_damage, ["fire:permanent_flame"] = radiant_damage.config.fire_damage},
+		inverse_square_falloff = true,
+		default_attenuation = 0, -- heat is blocked by anything.
+		on_damage = on_fire_damage,
+	})
 end
 
 if radiant_damage.config.enable_mese_damage then
@@ -366,11 +416,25 @@ for _, amp_node in ipairs(amplifiers) do
 	end
 end
 
+local on_radiation_damage = function(player, damage, pos)
+	local radiation_multiplier = player:get_armor_groups().radiation
+	if radiation_multiplier then
+		damage = damage * radiation_multiplier / 100
+	end
+	damage = math.floor(damage)
+	if damage > 0 then
+		minetest.log("action", player:get_player_name() .. " takes " .. tostring(damage) .. " damage from mese radiation damage at " .. minetest.pos_to_string(pos))
+		player:set_hp(player:get_hp() - damage)
+		minetest.sound_play({name = "radiant_damage_geiger", gain = math.min(1, damage/10), to_player=player:get_player_name()})
+	end
+end
+
 radiant_damage.register_radiant_damage("mese", {
 	interval = radiant_damage.config.mese_interval,
 	inverse_square_falloff = true,
 	emitted_by = {["default:stone_with_mese"] = radiant_damage.config.mese_damage, ["default:mese"] = radiant_damage.config.mese_damage * 9},
 	attenuated_by = {["group:stone"] = 0.5, ["group:mese_radiation_shield"] = 0.1, ["group:mese_radiation_amplifier"] = 4},
 	default_attenuation = 0.9,
+	on_damage = on_radiation_damage,
 })
 end

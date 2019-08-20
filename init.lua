@@ -367,7 +367,7 @@ if radiant_damage.config.enable_heat_damage then
 			if damage > 0 then
 				minetest.log("action", player:get_player_name() .. " takes " .. tostring(damage) .. " damage from heat radiant damage at " .. minetest.pos_to_string(pos))
 				player:set_hp(player:get_hp() - damage)
-				minetest.sound_play({name = "radiant_damage_sizzle", gain = math.min(1, damage/10), pos=pos})
+				minetest.sound_play("radiant_damage_sizzle", {gain = math.min(1, damage/10), pos=pos})
 			end
 		end
 	else
@@ -380,7 +380,7 @@ if radiant_damage.config.enable_heat_damage then
 			if damage > 0 then
 				minetest.log("action", player:get_player_name() .. " takes " .. tostring(damage) .. " damage from heat radiant damage at " .. minetest.pos_to_string(pos))
 				player:set_hp(player:get_hp() - damage)
-				minetest.sound_play({name = "radiant_damage_sizzle", gain = math.min(1, damage/10), pos=pos})
+				minetest.sound_play("radiant_damage_sizzle", {gain = math.min(1, damage/10), pos=pos})
 			end
 		end
 	end
@@ -425,7 +425,7 @@ local on_radiation_damage = function(player, damage, pos)
 	if damage > 0 then
 		minetest.log("action", player:get_player_name() .. " takes " .. tostring(damage) .. " damage from mese radiation damage at " .. minetest.pos_to_string(pos))
 		player:set_hp(player:get_hp() - damage)
-		minetest.sound_play({name = "radiant_damage_geiger", gain = math.min(1, damage/10), to_player=player:get_player_name()})
+		minetest.sound_play({name = "radiant_damage_geiger", gain = math.min(1, damage/10)}, {to_player=player:get_player_name()})
 	end
 end
 

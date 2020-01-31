@@ -287,7 +287,7 @@ radiant_damage.register_radiant_damage = function(damage_name, damage_def)
 			timer = timer - interval
 			
 			for _, player in pairs(minetest.get_connected_players()) do
-				local player_pos = player:getpos() -- node player's feet are in this location. Add 1 to y to get chest height, more intuitive that way
+				local player_pos = player:get_pos() -- node player's feet are in this location. Add 1 to y to get chest height, more intuitive that way
 				player_pos.y = player_pos.y + 1
 
 				local rounded_pos = vector.round(player_pos)
